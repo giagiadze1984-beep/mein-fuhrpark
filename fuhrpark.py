@@ -92,3 +92,4 @@ elif menu == "Daten verwalten":
                 st.success("Eintrag gelöscht!")
                 st.rerun()
 
+
