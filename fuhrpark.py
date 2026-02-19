@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 st.set_page_config(page_title="Fuhrpark Management Pro", layout="wide")
 
-# DEIN LINK ZUM BEARBEITEN (Browser-URL deines Sheets)
+# DEIN LINK ZUM BEARBEITEN
 SHEET_EDIT_URL = "https://docs.google.com/spreadsheets/d/1k1zU3b7GUxFNqGQYkdy4RcUyKNhEbOdB1avBMJa3Yss/edit"
 
 # DATEN LADEN
@@ -25,6 +25,11 @@ try:
         df_autos['km_aktuell'] = pd.to_numeric(df_autos['km_aktuell'], errors='coerce').fillna(0)
 
     df_services['datum'] = pd.to_datetime(df_services['datum'], errors='coerce')
+    
+    # TÜV Datum umwandeln
+    if 'tuev' in df_autos.columns:
+        df_autos['tuev'] = pd.to_datetime(df_autos['tuev'], dayfirst=True, errors='coerce')
+        
 except Exception as e:
     st.error("Daten konnten nicht geladen werden.")
     st.stop()
@@ -32,23 +37,22 @@ except Exception as e:
 # --- NAVIGATION & TOOLS ---
 st.title("🚗 Mein Fuhrpark-Manager")
 
-with st.expander("🛠️ Verwaltung & Eingabe (Hier klicken)"):
+with st.expander("🛠️ Verwaltung & Eingabe"):
     col1, col2, col3 = st.columns(3)
     with col1:
         st.write("**Hinzufügen / Bearbeiten**")
         st.link_button("📝 Google Sheet öffnen", SHEET_EDIT_URL)
-        st.caption("Einfach in die nächste freie Zeile schreiben oder Werte ändern.")
     with col2:
         st.write("**Löschen**")
-        st.info("Im Google Sheet die ganze Zeile markieren -> Rechtsklick -> Zeile löschen.")
+        st.info("Im Sheet Zeile markieren -> Rechtsklick -> Zeile löschen.")
     with col3:
-        st.write("**Bilder/PDFs**")
-        st.write("Link von Google Drive in die Spalte 'Link' kopieren.")
+        st.write("**TÜV & Intervalle**")
+        st.caption("Trage Termine/Intervalle im Blatt 'autos' ein.")
 
 st.divider()
 
-# --- WARTUNGS-AMPEL ---
-st.subheader("⚠️ Wartungs-Status")
+# --- WARTUNGS- & TÜV-AMPEL ---
+st.subheader("⚠️ Status-Check (Wartung & TÜV)")
 if not df_autos.empty:
     ampel_cols = st.columns(len(df_autos))
     heute = datetime.now()
@@ -58,24 +62,42 @@ if not df_autos.empty:
         km_int = row['intervall'] if 'intervall' in df_autos.columns else 20000
         zeit_int = row['zeit_intervall'] if 'zeit_intervall' in df_autos.columns else 24
         km_jetzt = row['km_aktuell'] if 'km_aktuell' in df_autos.columns else 0
+        tuev_datum = row['tuev']
         
         serv = df_services[df_services['kennzeichen'] == kz].sort_values(by='datum', ascending=False)
         
         with ampel_cols[idx]:
+            st.markdown(f"### {kz}")
+            
+            # 1. WARTUNGS-LOGIK
             if not serv.empty:
                 l_serv = serv.iloc[0]
                 diff_km = km_jetzt - l_serv['km_stand']
                 diff_mon = (heute.year - l_serv['datum'].year) * 12 + heute.month - l_serv['datum'].month
                 
                 if diff_km >= km_int or diff_mon >= zeit_int:
-                    st.error(f"**{kz}**\n\nFÄLLIG!")
+                    st.error(f"🔧 Service FÄLLIG!")
                 elif diff_km >= (km_int * 0.8) or diff_mon >= (zeit_int * 0.8):
-                    st.warning(f"**{kz}**\n\nBald fällig")
+                    st.warning(f"🔧 Service bald fällig")
                 else:
-                    st.success(f"**{kz}**\n\nOK")
+                    st.success(f"🔧 Service OK")
                 st.caption(f"{int(diff_km)} km / {int(diff_mon)} Mon. seit Service")
             else:
-                st.info(f"**{kz}**\n\nKeine Daten")
+                st.info("🔧 Keine Service-Daten")
+
+            # 2. TÜV-LOGIK
+            if pd.notnull(tuev_datum):
+                diff_tuev = (tuev_datum - heute).days
+                tuev_str = tuev_datum.strftime('%m/%Y')
+                
+                if diff_tuev < 0:
+                    st.error(f"📑 TÜV ABGELAUFEN ({tuev_str})")
+                elif diff_tuev < 60: # Weniger als 60 Tage
+                    st.warning(f"📑 TÜV fällig in {diff_tuev} Tagen")
+                else:
+                    st.success(f"📑 TÜV bis {tuev_str}")
+            else:
+                st.info("📑 Kein TÜV-Datum")
 
 st.divider()
 
