@@ -11,7 +11,7 @@ try:
     # Wir holen den Link direkt aus den Secrets für einen Test
     url = st.secrets["connections"]["gsheets"]["spreadsheet"]
     
-    conn = st.connection("gsheets", type=GSheetsConnection)
+   conn = st.connection("gsheets", type=GSheetsConnection)
     
     # Daten laden - Falls ein Fehler auftritt, versuchen wir es ohne Cache
     df_autos = conn.read(worksheet="autos", ttl=0)
@@ -91,3 +91,4 @@ elif menu == "Daten verwalten":
                 conn.update(worksheet="services", data=df_services)
                 st.success("Eintrag gelöscht!")
                 st.rerun()
+
