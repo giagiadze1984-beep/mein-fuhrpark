@@ -5,13 +5,16 @@ from datetime import datetime
 
 st.set_page_config(page_title="Fuhrpark Manager Pro", layout="wide")
 st.title("🚗 Mein Fuhrpark-Manager (Cloud)")
-
 # Verbindung zu Google Sheets herstellen
-conn = st.connection("gsheets", type=GSheetsConnection)
+try:
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    df_autos = conn.read(worksheet="autos")
+    df_services = conn.read(worksheet="services")
+except Exception as e:
+    st.error("Verbindung zu Google Sheets fehlgeschlagen!")
+    st.info("Prüfe, ob der Link in den Secrets korrekt ist und das Sheet für 'Jeder mit dem Link' freigegeben wurde.")
+    st.stop()
 
-# Daten laden
-df_autos = conn.read(worksheet="autos")
-df_services = conn.read(worksheet="services")
 
 # Sidebar Menü
 menu = st.sidebar.selectbox("Menü", ["Fahrzeugübersicht", "Neuen Service eintragen", "Auto hinzufügen"])
@@ -66,3 +69,4 @@ elif menu == "Fahrzeugübersicht":
             st.table(historie)
         else:
             st.info("Keine Einträge vorhanden.")
+
