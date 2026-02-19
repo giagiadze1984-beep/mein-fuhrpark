@@ -6,7 +6,7 @@ from datetime import datetime
 st.set_page_config(page_title="Fuhrpark Manager Pro", layout="wide")
 st.title("🚗 Mein Fuhrpark-Manager")
 
-# Verbindung herstellen - Achte darauf, dass diese Zeilen ganz links am Rand stehen!
+# Verbindung herstellen
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
     df_autos = conn.read(worksheet="autos", ttl=0)
@@ -20,7 +20,7 @@ except Exception as e:
     st.code(str(e))
     st.stop()
 
-# Sidebar Menü
+# Ab hier ist alles wieder normal am linken Rand
 menu = st.sidebar.selectbox("Menü", ["Fahrzeugübersicht", "Neuen Service eintragen", "Auto hinzufügen", "Daten verwalten"])
 
 if menu == "Auto hinzufügen":
