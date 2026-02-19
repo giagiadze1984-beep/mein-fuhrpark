@@ -6,28 +6,21 @@ from datetime import datetime
 st.set_page_config(page_title="Fuhrpark Manager Pro", layout="wide")
 st.title("🚗 Mein Fuhrpark-Manager")
 
-# Verbindung mit automatischer Link-Korrektur
+# Verbindung herstellen - Achte darauf, dass diese Zeilen ganz links am Rand stehen!
 try:
-    # Wir holen den Link direkt aus den Secrets für einen Test
-    url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-    
-   conn = st.connection("gsheets", type=GSheetsConnection)
-    
-    # Daten laden - Falls ein Fehler auftritt, versuchen wir es ohne Cache
+    conn = st.connection("gsheets", type=GSheetsConnection)
     df_autos = conn.read(worksheet="autos", ttl=0)
     df_services = conn.read(worksheet="services", ttl=0)
     
-    # Spaltennamen klein machen
+    # Spaltennamen vereinheitlichen
     df_autos.columns = [c.lower() for c in df_autos.columns]
     df_services.columns = [c.lower() for c in df_services.columns]
-    
 except Exception as e:
-    st.error("Verbindung hakt noch.")
-    st.info("Bitte oben rechts im Menü auf 'Clear Cache' klicken!")
+    st.error("Verbindung hakt noch. Bitte 'Clear Cache' im Menü rechts oben klicken!")
     st.code(str(e))
     st.stop()
 
-# --- AB HIER DAS MENÜ ---
+# Sidebar Menü
 menu = st.sidebar.selectbox("Menü", ["Fahrzeugübersicht", "Neuen Service eintragen", "Auto hinzufügen", "Daten verwalten"])
 
 if menu == "Auto hinzufügen":
@@ -83,13 +76,13 @@ elif menu == "Daten verwalten":
                 st.rerun()
     with col2:
         if not df_services.empty:
-            st.write("Service löschen (ID links eingeben):")
-            st.dataframe(df_services)
-            id_del = st.number_input("Zeilen-ID", min_value=0, max_value=len(df_services)-1, step=1)
+            st.write("Service löschen (ID links):")
+            df_with_id = df_services.copy()
+            df_with_id['id'] = df_with_id.index
+            st.dataframe(df_with_id)
+            id_del = st.number_input("ID eingeben", min_value=0, max_value=len(df_services)-1, step=1)
             if st.button("Eintrag jetzt löschen"):
                 df_services = df_services.drop(id_del)
                 conn.update(worksheet="services", data=df_services)
                 st.success("Eintrag gelöscht!")
                 st.rerun()
-
-
