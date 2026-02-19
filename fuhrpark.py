@@ -3,7 +3,11 @@ import pandas as pd
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-st.set_page_config(page_title="Fuhrpark Management Pro", layout="wide")
+st.set_page_config(
+    page_title="Fuhrpark Manager",
+    page_icon="🚗", # Hier kannst du ein Emoji nutzen, das dann als Icon dient
+    layout="wide"
+)
 
 # DEIN LINK ZUM BEARBEITEN
 SHEET_EDIT_URL = "https://docs.google.com/spreadsheets/d/1k1zU3b7GUxFNqGQYkdy4RcUyKNhEbOdB1avBMJa3Yss/edit"
@@ -126,3 +130,4 @@ if not df_autos.empty:
                 st.write(f"**Beschreibung:** {r['beschreibung']}")
                 if 'link' in r and pd.notnull(r['link']) and str(r['link']).startswith('http'):
                     st.link_button("📄 Dokument öffnen", str(r['link']))
+
