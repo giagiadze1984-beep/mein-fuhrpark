@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 st.set_page_config(
     page_title="Fuhrpark Manager",
-    page_icon="C:\Users\s3000\Downloads\Gemini_Generated_Image_ca6ug9ca6ug9ca6u.png", # Hier kannst du ein Emoji nutzen, das dann als Icon dient
+    page_icon="🚗", 
     layout="wide"
 )
 
@@ -130,6 +130,7 @@ if not df_autos.empty:
                 st.write(f"**Beschreibung:** {r['beschreibung']}")
                 if 'link' in r and pd.notnull(r['link']) and str(r['link']).startswith('http'):
                     st.link_button("📄 Dokument öffnen", str(r['link']))
+
 
 
 
